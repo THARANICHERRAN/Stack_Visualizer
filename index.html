@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stack Visualizer</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+  }
+
+  body {
+    margin: 0;
+    height: 100vh;
+    background: linear-gradient(135deg, #1e1e1e, #2c2c2c);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+  }
+
+  h1 {
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+    text-shadow: 0 0 5px #666;
+  }
+
+  .stack-container {
+    width: 260px;
+    height: 400px;
+    border: 3px solid #888;
+    border-radius: 10px;
+    background: #111;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+    overflow: hidden;
+  }
+
+  .stack-element {
+    width: 80%;
+    height: 45px;
+    background: #4caf50;
+    color: #fff;
+    font-weight: 600;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 6px 0;
+    border-radius: 6px;
+    animation: pushIn 0.4s ease;
+  }
+
+  @keyframes pushIn {
+    0% { transform: translateY(-60px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes popOut {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-60px); opacity: 0; }
+  }
+
+  .controls {
+    margin-top: 25px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  input {
+    padding: 10px 15px;
+    border-radius: 6px;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    text-align: center;
+  }
+
+  button {
+    padding: 12px 20px;
+    font-size: 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    background: #444;
+    color: #fff;
+    transition: all 0.3s ease;
+  }
+
+  button:hover {
+    background: #666;
+  }
+
+  .message {
+    height: 24px;
+    margin-top: 15px;
+    text-align: center;
+    font-size: 14px;
+    color: #ffcc00;
+  }
+
+  .size-setup {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .size-setup input {
+    width: 80px;
+  }
+</style>
+</head>
+
+<body>
+  <h1>🧱 Stack Visualizer</h1>
+
+  <!-- Step 1: Stack Size Input -->
+  <div class="size-setup" id="size-setup">
+    <input type="number" id="stackSize" placeholder="Enter Size" min="1" />
+    <button onclick="setStackSize()">Set Size</button>
+  </div>
+
+  <!-- Step 2: Stack Display -->
+  <div class="stack-container" id="stack" style="display: none;"></div>
+
+  <!-- Step 3: Controls -->
+  <div class="controls" id="controls" style="display: none;">
+    <input type="text" id="val" placeholder="Value" />
+    <button onclick="pushEl()">Push</button>
+    <button onclick="popEl()">Pop</button>
+    <button onclick="peekEl()">Peek</button>
+    <button onclick="resetEl()">Reset</button>
+  </div>
+
+  <div class="message" id="msg"></div>
+
+<script>
+  let stack = [];
+  let maxSize = 0;
+  const stackBox = document.getElementById('stack');
+  const msg = document.getElementById('msg');
+  const controls = document.getElementById('controls');
+  const sizeSetup = document.getElementById('size-setup');
+
+  function showMsg(text, color = '#ffcc00') {
+    msg.textContent = text;
+    msg.style.color = color;
+  }
+
+  function setStackSize() {
+    const size = parseInt(document.getElementById('stackSize').value);
+    if (!size || size <= 0) {
+      showMsg('Enter valid size!', 'red');
+      return;
+    }
+    maxSize = size;
+    sizeSetup.style.display = 'none';
+    stackBox.style.display = 'flex';
+    controls.style.display = 'flex';
+    showMsg(`Stack of size ${maxSize} created!`, '#9effa1');
+  }
+
+  function renderStack() {
+    stackBox.innerHTML = '';
+    stack.forEach(value => {
+      const el = document.createElement('div');
+      el.className = 'stack-element';
+      el.textContent = value;
+      stackBox.appendChild(el);
+    });
+  }
+
+  function pushEl() {
+    const val = document.getElementById('val').value.trim();
+    if (!val) {
+      showMsg('Enter a value to push!', 'orange');
+      return;
+    }
+    if (stack.length >= maxSize) {
+      showMsg('Stack Overflow!', 'red');
+      return;
+    }
+
+    stack.push(val);
+    renderStack();
+    document.getElementById('val').value = '';
+    showMsg(`Pushed: ${val}`, '#9effa1');
+  }
+
+  function popEl() {
+    if (stack.length === 0) {
+      showMsg('Stack Underflow!', 'red');
+      return;
+    }
+
+    const topValue = stack.pop();
+    const elements = document.querySelectorAll('.stack-element');
+    if (elements.length > 0) {
+      const topEl = elements[elements.length - 1];
+      topEl.style.animation = 'popOut 0.4s ease forwards';
+      setTimeout(() => {
+        renderStack();
+        showMsg(`Popped: ${topValue}`, '#ff7070');
+      }, 350);
+    } else {
+      renderStack();
+    }
+  }
+
+  function peekEl() {
+    if (stack.length === 0) {
+      showMsg('Stack Empty!', 'orange');
+      return;
+    }
+    showMsg(`Top Element: ${stack[stack.length - 1]}`, '#fff176');
+  }
+
+  function resetEl() {
+    stack = [];
+    renderStack();
+    showMsg('Stack Reset!', '#9effa1');
+  }
+</script>
+</body>
+</html>
